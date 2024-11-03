@@ -1,28 +1,26 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import {getAuth, signInWithEmailAndPassword} from 'firebase/auth';
-import { User } from '../models/User.model';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseService {
 
-  auth = inject( AngularFireAuth );
+  constructor(private afAuth: AngularFireAuth) {}
 
+  // AUTENTIFICACION
+  signIn(user: User) {
+    if (!user.email || !user.password) {
+      throw new Error('Email y contraseña son obligatorios');
+    }
 
-
-
-
-// AUTENTIFICACION
-
-
-
-// acceder
-
-signIn(user: User) {
-  return signInWithEmailAndPassword(getAuth(), user.name, user.password )
-}
-
-
+    const auth = getAuth();
+    return signInWithEmailAndPassword(auth, user.email, user.password)
+      .catch(error => {
+        console.error('Error al iniciar sesión:', error);
+        throw error; // O maneja el error de alguna otra forma
+      });
+  }
 }
