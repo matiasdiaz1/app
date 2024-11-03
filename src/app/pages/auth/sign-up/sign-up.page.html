@@ -19,6 +19,11 @@
         <div *ngIf="form.controls.password.errors?.['required']">La contraseña es requerida</div>
       </div>
 
+      <ion-item>
+        <ion-label>Registrarse como profesor</ion-label>
+        <ion-toggle formControlName="isTeacher"></ion-toggle>
+      </ion-item>
+
       <ion-button expand="block" mode="ios" class="submit" type="submit" [disabled]="form.invalid">
         Regístrate
         <ion-icon slot="end" name="person-add-outline"></ion-icon>

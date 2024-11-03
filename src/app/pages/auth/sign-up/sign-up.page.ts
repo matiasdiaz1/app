@@ -16,7 +16,8 @@ export class SignUpPage implements OnInit {
     uid: new FormControl(''),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
-    name: new FormControl('', [Validators.required, Validators.minLength(4)])
+    name: new FormControl('', [Validators.required, Validators.minLength(4)]),
+    isTeacher: new FormControl(false)
   });
 
   firebaseSvc = inject(FirebaseService);
@@ -34,7 +35,9 @@ export class SignUpPage implements OnInit {
         email: this.form.get('email')!.value,
         password: this.form.get('password')!.value,
         name: this.form.get('name')!.value,
-        uid: ''
+        uid: '',
+        isTeacher: this.form.get('isTeacher')!.value,
+        role: this.form.get('isTeacher')!.value ? 'teacher' : 'student'
       };
 
       console.log('Intentando registrar usuario con:', user);
@@ -43,7 +46,7 @@ export class SignUpPage implements OnInit {
         const res = await this.firebaseSvc.signUp(user);
         const uid = res.user.uid;
         this.form.controls.uid.setValue(uid);
-        await this.setUserInfo(uid); // Espera a que se complete
+        await this.setUserInfo(uid, user); // Pasar el objeto user
         console.log('Usuario registrado con éxito:', res);
       } catch (error) {
         console.error('Error al registrar usuario:', error);
@@ -62,11 +65,11 @@ export class SignUpPage implements OnInit {
     }
   }
 
-  async setUserInfo(uid: string) {
+  async setUserInfo(uid: string, user: User) {
     const loading = await this.utilsSvc.loading();
     await loading.present();
 
-    const userData = { ...this.form.value };
+    const userData = { ...user };
     delete userData.password; // Eliminar la contraseña antes de guardar
 
     const path = `users/${uid}`;
