@@ -1,36 +1,37 @@
 import { inject, Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   updateProfile,
   onAuthStateChanged
 } from 'firebase/auth';
 import { User } from '../models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { getFirestore, setDoc, doc } from '@angular/fire/firestore';
+import { getFirestore, setDoc, doc, getDoc } from '@angular/fire/firestore';
 import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseService {
-  
+
   private authState = new BehaviorSubject<any>(null);
   public currentUser$ = this.authState.asObservable();
-  
+
   firestore = inject(AngularFirestore);
-  
+  router = inject(Router);
+
   constructor(private afAuth: AngularFireAuth) {
-    // Observar cambios en el estado de autenticación
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       this.authState.next(user);
     });
   }
 
-  // AUTENTIFICACION
+  // AUTENTICACIÓN CON VERIFICACIÓN DE ROL
   async signIn(user: User) {
     if (!user.email || !user.password) {
       throw new Error('Email y contraseña son obligatorios');
@@ -39,10 +40,20 @@ export class FirebaseService {
     try {
       const auth = getAuth();
       const userCredential = await signInWithEmailAndPassword(
-        auth, 
-        user.email, 
+        auth,
+        user.email,
         user.password
       );
+
+      const userDoc = await this.getUserProfile(userCredential.user.uid);
+
+      if (userDoc.isTeacher !== user.isTeacher) {
+        await auth.signOut();
+        throw new Error(user.isTeacher ? 
+          'Esta cuenta no es de profesor' : 
+          'Esta cuenta no es de alumno');
+      }
+
       await this.verifyUserSession(userCredential.user);
       return userCredential;
     } catch (error) {
@@ -51,7 +62,7 @@ export class FirebaseService {
     }
   }
 
-  // REGISTRAR NUEVO USUARIO
+  // REGISTRO CON VERIFICACIÓN DE ROL
   async signUp(user: User) {
     if (!user.email || !user.password) {
       throw new Error('Email y contraseña son obligatorios');
@@ -60,16 +71,28 @@ export class FirebaseService {
     try {
       const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        user.email, 
+        auth,
+        user.email,
         user.password
       );
-      
-      // Actualizar el perfil inmediatamente después de crear la cuenta
-      if (userCredential.user && user.name) {
-        await this.updateUser(user.name);
+
+      if (userCredential.user) {
+        if (user.name) {
+          await this.updateUser(user.name);
+        }
+
+        const userData = {
+          uid: userCredential.user.uid,
+          email: user.email,
+          name: user.name,
+          isTeacher: user.isTeacher,
+          role: user.isTeacher ? 'teacher' : 'student',
+          createdAt: new Date().toISOString()
+        };
+
+        await this.setDocument(`users/${userCredential.user.uid}`, userData);
       }
-      
+
       return userCredential;
     } catch (error) {
       this.handleAuthError(error);
@@ -77,7 +100,7 @@ export class FirebaseService {
     }
   }
 
-  // ACTUALIZAR USUARIO
+  // ACTUALIZAR PERFIL
   async updateUser(displayName: string) {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -95,15 +118,32 @@ export class FirebaseService {
     }
   }
 
-  // Verificar sesión del usuario
+  // OBTENER PERFIL DE USUARIO
+  async getUserProfile(uid: string) {
+    try {
+      const db = getFirestore();
+      const docRef = doc(db, `users/${uid}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return docSnap.data() as User;
+      } else {
+        throw new Error('Usuario no encontrado');
+      }
+    } catch (error) {
+      console.error('Error al obtener perfil:', error);
+      throw error;
+    }
+  }
+
+  // VERIFICAR SESIÓN
   private async verifyUserSession(user: any) {
     if (!user) {
       throw new Error('No se pudo verificar la sesión del usuario');
     }
-    
+
     try {
       const token = await user.getIdToken();
-      // Guardar el token en localStorage si lo necesitas
       localStorage.setItem('userToken', token);
     } catch (error) {
       console.error('Error al obtener el token:', error);
@@ -111,7 +151,7 @@ export class FirebaseService {
     }
   }
 
-  // BASE DE DATOS
+  // GUARDAR DOCUMENTO EN FIRESTORE
   async setDocument(path: string, data: any) {
     try {
       const db = getFirestore();
@@ -126,23 +166,24 @@ export class FirebaseService {
     }
   }
 
-  // Cerrar sesión
+  // CERRAR SESIÓN
   async signOut() {
     try {
       const auth = getAuth();
       await auth.signOut();
       localStorage.removeItem('userToken');
       this.authState.next(null);
+      this.router.navigate(['/auth']);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       throw error;
     }
   }
 
-  // Manejador de errores de autenticación
+  // MANEJAR ERRORES DE AUTENTICACIÓN
   private handleAuthError(error: any) {
     let message = 'Ha ocurrido un error en la autenticación';
-    
+
     switch (error.code) {
       case 'auth/email-already-in-use':
         message = 'Este correo electrónico ya está registrado';
@@ -169,7 +210,7 @@ export class FirebaseService {
         message = 'Demasiados intentos fallidos. Por favor, intente más tarde';
         break;
     }
-    
+
     console.error('Error de autenticación:', message);
     throw new Error(message);
   }

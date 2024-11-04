@@ -11,9 +11,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./sign-up.page.scss'],
 })
 export class SignUpPage implements OnInit {
-
   form = new FormGroup({
-    uid: new FormControl(''),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required, Validators.minLength(4)]),
@@ -31,65 +29,41 @@ export class SignUpPage implements OnInit {
       const loading = await this.utilsSvc.loading();
       await loading.present();
 
-      const user: User = {
-        email: this.form.get('email')!.value,
-        password: this.form.get('password')!.value,
-        name: this.form.get('name')!.value,
-        uid: '',
-        isTeacher: this.form.get('isTeacher')!.value,
-        role: this.form.get('isTeacher')!.value ? 'teacher' : 'student'
-      };
-
-      console.log('Intentando registrar usuario con:', user);
-
       try {
+        const user: User = {
+          email: this.form.get('email')!.value,
+          password: this.form.get('password')!.value,
+          name: this.form.get('name')!.value,
+          uid: '',
+          isTeacher: this.form.get('isTeacher')!.value,
+          role: this.form.get('isTeacher')!.value ? 'teacher' : 'student'
+        };
+
         const res = await this.firebaseSvc.signUp(user);
-        const uid = res.user.uid;
-        this.form.controls.uid.setValue(uid);
-        await this.setUserInfo(uid, user); // Pasar el objeto user
-        console.log('Usuario registrado con éxito:', res);
-      } catch (error) {
-        console.error('Error al registrar usuario:', error);
+
+        if (res && res.user) {
+          this.form.reset();
+          this.router.navigate(['/main/home']); // Cambia la redirección aquí
+        }
+      } catch (error: any) {
         this.utilsSvc.presentToast({
           message: error.message,
           duration: 2500,
-          color: 'primary',
+          color: 'danger',
           position: 'middle',
           icon: 'alert-circle-outline'
         });
       } finally {
-        loading.dismiss(); // Asegúrate de que se llame aquí
+        loading.dismiss();
       }
     } else {
-      console.log('Formulario inválido');
-    }
-  }
-
-  async setUserInfo(uid: string, user: User) {
-    const loading = await this.utilsSvc.loading();
-    await loading.present();
-
-    const userData = { ...user };
-    delete userData.password; // Eliminar la contraseña antes de guardar
-
-    const path = `users/${uid}`;
-
-    try {
-      await this.firebaseSvc.setDocument(path, userData);
-      console.log('Usuario registrado en Firestore con éxito');
-      this.router.navigate(['/main/home']); // Redirigir al home
-      this.form.reset();
-    } catch (error) {
-      console.error('Error al registrar usuario en Firestore:', error);
       this.utilsSvc.presentToast({
-        message: error.message,
+        message: 'Por favor, completa todos los campos correctamente',
         duration: 2500,
-        color: 'primary',
+        color: 'warning',
         position: 'middle',
         icon: 'alert-circle-outline'
       });
-    } finally {
-      loading.dismiss(); // Asegúrate de que se llame aquí
     }
   }
 }
