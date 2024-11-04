@@ -43,7 +43,12 @@ export class SignUpPage implements OnInit {
 
         if (res && res.user) {
           this.form.reset();
-          this.router.navigate(['/main/home']); // Cambia la redirección aquí
+          // Redirección según el rol del usuario
+          if (user.isTeacher) {
+            this.router.navigate(['/main/teacher-home']); // Redirige a la página de profesor
+          } else {
+            this.router.navigate(['/main/student-home']); // Redirige a la página de alumno
+          }
         }
       } catch (error: any) {
         this.utilsSvc.presentToast({
