@@ -5,20 +5,20 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  onAuthStateChanged
+  onAuthStateChanged,
+  Auth
 } from 'firebase/auth';
-import { User } from '../models/user.model';
+import { User } from 'src/app/models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { getFirestore, setDoc, doc, getDoc } from '@angular/fire/firestore';
+import { getFirestore, setDoc, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { Attendance } from 'src/app/models/attendance.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseService {
-  [x: string]: any;
-
   private authState = new BehaviorSubject<any>(null);
   public currentUser$ = this.authState.asObservable();
 
@@ -32,7 +32,24 @@ export class FirebaseService {
     });
   }
 
-  // AUTENTICACIÓN CON VERIFICACIÓN DE ROL
+  async getCourses() {
+    try {
+      const db = getFirestore();
+      const coursesCollection = collection(db, 'courses');
+      const courseSnapshot = await getDocs(coursesCollection);
+      const coursesList: any[] = [];
+
+      courseSnapshot.forEach((doc) => {
+        coursesList.push({ id: doc.id, ...doc.data() });
+      });
+
+      return coursesList;
+    } catch (error) {
+      console.error('Error al obtener los cursos:', error);
+      throw error;
+    }
+  }
+
   async signIn(user: User) {
     if (!user.email || !user.password) {
       throw new Error('Email y contraseña son obligatorios');
@@ -40,19 +57,12 @@ export class FirebaseService {
 
     try {
       const auth = getAuth();
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        user.email,
-        user.password
-      );
-
+      const userCredential = await signInWithEmailAndPassword(auth, user.email, user.password);
       const userDoc = await this.getUserProfile(userCredential.user.uid);
 
       if (userDoc.isTeacher !== user.isTeacher) {
         await auth.signOut();
-        throw new Error(user.isTeacher ? 
-          'Esta cuenta no es de profesor' : 
-          'Esta cuenta no es de alumno');
+        throw new Error(user.isTeacher ? 'Esta cuenta no es de profesor' : 'Esta cuenta no es de alumno');
       }
 
       await this.verifyUserSession(userCredential.user);
@@ -63,7 +73,6 @@ export class FirebaseService {
     }
   }
 
-  // REGISTRO CON VERIFICACIÓN DE ROL
   async signUp(user: User) {
     if (!user.email || !user.password) {
       throw new Error('Email y contraseña son obligatorios');
@@ -71,11 +80,7 @@ export class FirebaseService {
 
     try {
       const auth = getAuth();
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        user.email,
-        user.password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, user.email, user.password);
 
       if (userCredential.user) {
         if (user.name) {
@@ -101,7 +106,6 @@ export class FirebaseService {
     }
   }
 
-  // ACTUALIZAR PERFIL
   async updateUser(displayName: string) {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -119,7 +123,6 @@ export class FirebaseService {
     }
   }
 
-  // OBTENER PERFIL DE USUARIO
   async getUserProfile(uid: string) {
     try {
       const db = getFirestore();
@@ -137,7 +140,6 @@ export class FirebaseService {
     }
   }
 
-  // OBTENER DOCUMENTO DE FIRESTORE
   async getDocument(path: string) {
     const db = getFirestore();
     const docRef = doc(db, path);
@@ -151,7 +153,6 @@ export class FirebaseService {
     }
   }
 
-  // VERIFICAR SESIÓN
   private async verifyUserSession(user: any) {
     if (!user) {
       throw new Error('No se pudo verificar la sesión del usuario');
@@ -166,7 +167,6 @@ export class FirebaseService {
     }
   }
 
-  // GUARDAR DOCUMENTO EN FIRESTORE
   async setDocument(path: string, data: any) {
     try {
       const db = getFirestore();
@@ -181,71 +181,57 @@ export class FirebaseService {
     }
   }
 
-  // REGISTRAR ASISTENCIA
-  async registerAttendance(studentId: string, teacherId: string) {
-    const db = getFirestore();
-    const attendanceRecord = {
-      studentId: studentId,
-      teacherId: teacherId,
-      date: new Date().toISOString(), // Fecha y hora actual
-    };
-
-    try {
-      await setDoc(doc(db, `attendance/${studentId}_${teacherId}_${new Date().toISOString()}`), attendanceRecord);
-      console.log('Asistencia registrada exitosamente');
-      return true;
-    } catch (error) {
-      console.error('Error al registrar asistencia:', error);
-      throw error;
-    }
-  }
-
-  // CERRAR SESIÓN
-  async signOut() {
-    try {
-      const auth = getAuth();
-      await auth.signOut();
-      localStorage.removeItem('userToken');
-      this.authState.next(null);
-      this.router.navigate(['/auth']);
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      throw error;
-    }
-  }
-
-  // MANEJAR ERRORES DE AUTENTICACIÓN
   private handleAuthError(error: any) {
-    let message = 'Ha ocurrido un error en la autenticación';
+    const messages: Record<string, string> = {
+      'auth/email-already-in-use': 'Este correo electrónico ya está registrado',
+      'auth/invalid-email': 'El correo electrónico no es válido',
+      'auth/operation-not-allowed': 'Operación no permitida',
+      'auth/weak-password': 'La contraseña es demasiado débil',
+      'auth/user-disabled': 'Esta cuenta ha sido deshabilitada',
+      'auth/user-not-found': 'Usuario no encontrado',
+      'auth/wrong-password': 'Contraseña incorrecta',
+      'auth/too-many-requests': 'Demasiados intentos fallidos. Por favor, intente más tarde',
+    };
+    throw new Error(messages[error.code] || 'Ha ocurrido un error en la autenticación');
+  }
 
-    switch (error.code) {
-      case 'auth/email-already-in-use':
-        message = 'Este correo electrónico ya está registrado';
-        break;
-      case 'auth/invalid-email':
-        message = 'El correo electrónico no es válido';
-        break;
-      case 'auth/operation-not-allowed':
-        message = 'Operación no permitida';
-        break;
-      case 'auth/weak-password':
-        message = 'La contraseña es demasiado débil';
-        break;
-      case 'auth/user-disabled':
-        message = 'Esta cuenta ha sido deshabilitada';
-        break;
-      case 'auth/user-not-found':
-        message = 'Usuario no encontrado';
-        break;
-      case 'auth/wrong-password':
-        message = 'Contraseña incorrecta';
-        break;
-      case 'auth/too-many-requests':
-        message = 'Demasiados intentos fallidos. Por favor, intente más tarde';
-        break;
+  async recordAttendance(attendance: Attendance) {
+    try {
+        const db = getFirestore();
+        const attendancePath = `attendances/${attendance.studentId}_${attendance.date}`; 
+        await setDoc(doc(db, attendancePath), attendance);
+        console.log('Asistencia registrada:', attendance);
+        return true;
+    } catch (error) {
+        console.error('Error al registrar asistencia:', error); // Imprimir el error para depuración
+        throw error;
     }
+}
 
-    console.error('Error de autenticación:', message);
-    throw new Error(message);
+  async signOut() {
+    const auth = getAuth();
+    await auth.signOut();
+    localStorage.clear();
+    this.authState.next(null);
+    await this.router.navigate(['/auth']);
+  }
+
+  async getStudentAttendance(studentId: string) {
+    try {
+      const db = getFirestore();
+      const attendanceCollection = collection(db, 'attendances');
+      const q = query(attendanceCollection, where('studentId', '==', studentId));
+      const attendanceSnapshot = await getDocs(q);
+
+      const attendanceList: Attendance[] = attendanceSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Attendance));
+
+      return attendanceList;
+    } catch (error) {
+      console.error('Error al obtener las asistencias:', error);
+      throw error;
+    }
   }
 }

@@ -11,13 +11,10 @@ import { AngularFireModule } from '@angular/fire/compat';
 import { environment } from 'src/environments/environment';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 
-// Importar el componente de modal
-import { AttendanceModalComponent } from './pages/main/attendance-modal/attendance-modal.component'; // Asegúrate de que la ruta sea correcta
 
 @NgModule({
   declarations: [
     AppComponent,
-    AttendanceModalComponent // Declarar el componente aquí
   ],
   imports: [
     BrowserModule,

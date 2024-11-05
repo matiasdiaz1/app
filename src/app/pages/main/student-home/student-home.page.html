@@ -1,17 +1,26 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Home Estudiante</ion-title>
+    <ion-title>Inicio Estudiante</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content [fullscreen]="true">
+  <ion-button expand="full" (click)="scan()" *ngIf="isSupported">
+    Escanear Código QR
+  </ion-button>
+
+  <ion-button expand="full" (click)="loadAttendance()">
+    Cargar Asistencia
+  </ion-button>
+
   <ion-list>
-    <ion-item *ngFor="let course of courses">
+    <ion-item *ngFor="let record of attendanceRecords">
       <ion-label>
-        <h2>{{ course.subject }} - Sección {{ course.section }}</h2>
+        <h2>{{ record.date }}</h2>
+        <p>Curso: {{ record.courseId }}</p>
+        <p>Sección: {{ record.section }}</p>
+        <p>Hora: {{ record.time }}</p>
       </ion-label>
-      <ion-button (click)="scanBarcode(course)">Escanear QR</ion-button>
-      <ion-button (click)="openAttendanceModal(course)">Ver Asistencia</ion-button>
     </ion-item>
   </ion-list>
 </ion-content>

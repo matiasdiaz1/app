@@ -8,6 +8,7 @@ import { TeacherHomePageRoutingModule } from './teacher-home-routing.module';
 
 import { TeacherHomePage } from './teacher-home.page';
 import { SharedModule } from "../../../shared/shared.module";
+import { FindCoursePipe } from 'src/app/pipes/find-course.pipe'; // Ruta al archivo del pipe
 
 @NgModule({
   imports: [
@@ -17,6 +18,6 @@ import { SharedModule } from "../../../shared/shared.module";
     TeacherHomePageRoutingModule,
     SharedModule
 ],
-  declarations: [TeacherHomePage]
+  declarations: [TeacherHomePage, FindCoursePipe]
 })
 export class TeacherHomePageModule {}

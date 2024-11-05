@@ -5,4 +5,6 @@ export interface User {
   name?: string;
   isTeacher: boolean;
   role?: string;
+
 }
+

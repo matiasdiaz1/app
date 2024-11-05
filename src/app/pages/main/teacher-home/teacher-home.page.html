@@ -1,13 +1,35 @@
-<app-header title="Profesor"></app-header>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Teacher Home</ion-title>
+  </ion-toolbar>
+</ion-header>
 
 <ion-content>
-  <ion-list>
-    <ion-item *ngFor="let course of courses">
-      <ion-label>
-        <h2>{{ course.subject }}</h2>
-        <p>Sección: {{ course.section }}</p>
-      </ion-label>
-      <ion-icon name="qr-code" slot="end"></ion-icon>
-    </ion-item>
-  </ion-list>
+  <!-- Selección de curso -->
+  <ion-item>
+    <ion-label>Selecciona un curso</ion-label>
+    <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange(selectedCourseId)">
+      <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.name }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Selección de sección, solo visible si hay un curso seleccionado -->
+  <ion-item *ngIf="selectedCourseId">
+    <ion-label>Selecciona una sección</ion-label>
+    <ion-select [(ngModel)]="selectedSection">
+      <ion-select-option *ngFor="let section of (courses | findCourse:selectedCourseId)?.sections" [value]="section">
+        {{ section }}
+      </ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Botón para generar el código QR, solo habilitado si curso y sección están seleccionados -->
+  <ion-button (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection">
+    Generar Código QR
+  </ion-button>
+
+  <!-- Muestra el código QR generado -->
+  <div *ngIf="qrCodeUrl">
+    <img [src]="qrCodeUrl" alt="Código QR">
+  </div>
 </ion-content>
