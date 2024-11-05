@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Teacher Home</ion-title>
+    <ion-title>Inicio Profesor</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -16,20 +16,27 @@
   <!-- Selección de sección, solo visible si hay un curso seleccionado -->
   <ion-item *ngIf="selectedCourseId">
     <ion-label>Selecciona una sección</ion-label>
-    <ion-select [(ngModel)]="selectedSection">
+    <ion-select [(ngModel)]="selectedSection" (ionChange)="onSectionChange(selectedSection)">
       <ion-select-option *ngFor="let section of (courses | findCourse:selectedCourseId)?.sections" [value]="section">
         {{ section }}
       </ion-select-option>
     </ion-select>
   </ion-item>
 
-  <!-- Botón para generar el código QR, solo habilitado si curso y sección están seleccionados -->
-  <ion-button (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection">
-    Generar Código QR
+  <!-- Botón para cargar asistencia -->
+  <ion-button expand="full" (click)="loadAttendance()" [disabled]="!selectedCourseId || !selectedSection">
+    Cargar Asistencia
   </ion-button>
 
-  <!-- Muestra el código QR generado -->
-  <div *ngIf="qrCodeUrl">
-    <img [src]="qrCodeUrl" alt="Código QR">
-  </div>
+  <!-- Lista de registros de asistencia -->
+  <ion-list>
+    <ion-item *ngFor="let record of attendanceRecords">
+      <ion-label>
+        <h2>{{ record.date }}</h2>
+        <p>Curso: {{ record.courseId }}</p>
+        <p>Sección: {{ record.section }}</p>
+        <p>Hora: {{ record.time }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 </ion-content>

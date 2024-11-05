@@ -234,4 +234,23 @@ export class FirebaseService {
       throw error;
     }
   }
+
+  async getAllAttendance(courseId: string, section: string) {
+    try {
+        const db = getFirestore();
+        const attendanceCollection = collection(db, 'attendances');
+        const q = query(attendanceCollection, where('courseId', '==', courseId), where('section', '==', section));
+        const attendanceSnapshot = await getDocs(q);
+
+        const attendanceList: Attendance[] = attendanceSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Attendance));
+
+        return attendanceList;
+    } catch (error) {
+        console.error('Error al obtener las asistencias:', error);
+        throw error;
+    }
+}
 }

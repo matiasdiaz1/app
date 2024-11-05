@@ -1,5 +1,6 @@
 // src/app/models/attendance.model.ts
 export interface Attendance {
+
   id?: string;         // ID del documento (opcional)
   studentId: string;   // UID del estudiante
   studentName: string; // Nombre del estudiante
