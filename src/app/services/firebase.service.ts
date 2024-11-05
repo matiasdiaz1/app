@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class FirebaseService {
+  [x: string]: any;
 
   private authState = new BehaviorSubject<any>(null);
   public currentUser$ = this.authState.asObservable();
@@ -136,6 +137,20 @@ export class FirebaseService {
     }
   }
 
+  // OBTENER DOCUMENTO DE FIRESTORE
+  async getDocument(path: string) {
+    const db = getFirestore();
+    const docRef = doc(db, path);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data();
+    } else {
+      console.error('No se encontró el documento:', path);
+      return null;
+    }
+  }
+
   // VERIFICAR SESIÓN
   private async verifyUserSession(user: any) {
     if (!user) {
@@ -162,6 +177,25 @@ export class FirebaseService {
       return true;
     } catch (error) {
       console.error('Error al guardar documento:', error);
+      throw error;
+    }
+  }
+
+  // REGISTRAR ASISTENCIA
+  async registerAttendance(studentId: string, teacherId: string) {
+    const db = getFirestore();
+    const attendanceRecord = {
+      studentId: studentId,
+      teacherId: teacherId,
+      date: new Date().toISOString(), // Fecha y hora actual
+    };
+
+    try {
+      await setDoc(doc(db, `attendance/${studentId}_${teacherId}_${new Date().toISOString()}`), attendanceRecord);
+      console.log('Asistencia registrada exitosamente');
+      return true;
+    } catch (error) {
+      console.error('Error al registrar asistencia:', error);
       throw error;
     }
   }
