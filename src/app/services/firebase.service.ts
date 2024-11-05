@@ -197,13 +197,29 @@ export class FirebaseService {
 
   async recordAttendance(attendance: Attendance) {
     try {
+        const currentUser = this.afAuth.currentUser; // Obtener el usuario autenticado
+        if (!currentUser) {
+            throw new Error('No hay usuario autenticado');
+        }
+        
+        // Obtener el ID del estudiante
+        const studentId = (await currentUser).uid; 
+
+        // Obtener el perfil del estudiante para obtener su nombre
+        const userProfile = await this.getUserProfile(studentId); 
+        
+        // Asignar los valores a la asistencia
+        attendance.studentId = studentId; // ID del estudiante
+        attendance.studentName = userProfile.name; // Nombre del estudiante
+
+        // Registrar la asistencia en Firestore
         const db = getFirestore();
         const attendancePath = `attendances/${attendance.studentId}_${attendance.date}`; 
         await setDoc(doc(db, attendancePath), attendance);
         console.log('Asistencia registrada:', attendance);
         return true;
     } catch (error) {
-        console.error('Error al registrar asistencia:', error); // Imprimir el error para depuración
+        console.error('Error al registrar asistencia:', error);
         throw error;
     }
 }
