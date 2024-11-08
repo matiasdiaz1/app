@@ -1,10 +1,10 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Teacher Home</ion-title>
+  <ion-toolbar color="primary">
+    <ion-title class="ion-text-center">Profesor</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content class="ion-padding">
   <!-- Selección de curso -->
   <ion-item>
     <ion-label>Selecciona un curso</ion-label>
@@ -13,7 +13,7 @@
     </ion-select>
   </ion-item>
 
-  <!-- Selección de sección, solo visible si hay un curso seleccionado -->
+  <!-- Selección de sección -->
   <ion-item *ngIf="selectedCourseId">
     <ion-label>Selecciona una sección</ion-label>
     <ion-select [(ngModel)]="selectedSection">
@@ -23,31 +23,31 @@
     </ion-select>
   </ion-item>
 
-  <!-- Botón para generar el código QR, solo habilitado si curso y sección están seleccionados -->
-  <ion-button (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection">
+  <!-- Botón para generar código QR -->
+  <ion-button (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection" expand="full" color="secondary">
     Generar Código QR
   </ion-button>
 
   <!-- Botón para cargar asistencia -->
-  <ion-button (click)="loadAttendance()" [disabled]="!selectedCourseId || !selectedSection">
+  <ion-button (click)="loadAttendance()" [disabled]="!selectedCourseId || !selectedSection" expand="full" color="tertiary">
     Cargar Asistencia
   </ion-button>
 
   <!-- Muestra el código QR generado -->
-  <div *ngIf="qrCodeUrl">
-    <img [src]="qrCodeUrl" alt="Código QR">
+  <div *ngIf="qrCodeUrl" class="qr-code-container">
+    <img [src]="qrCodeUrl" alt="Código QR" class="qr-code-img">
   </div>
 
-  <!-- Lista de registros de asistencia -->
+  <!-- Lista de asistencia -->
   <ion-list>
-    <ion-item *ngFor="let record of attendanceRecords">
+    <ion-item *ngFor="let record of attendanceRecords" class="attendance-item">
       <ion-label>
         <h2>{{ record.date }}</h2>
-        <p>Curso: {{ record.courseId }}</p>
-        <p>Sección: {{ record.section }}</p>
-        <p>Nombre Estudiante: {{ record.studentName }}</p>
-        <p>ID Estudiante: {{ record.studentId }}</p>
-        <p>Hora: {{ record.time }}</p>
+        <p><strong>Curso:</strong> {{ record.courseId }}</p>
+        <p><strong>Sección:</strong> {{ record.section }}</p>
+        <p><strong>Nombre Estudiante:</strong> {{ record.studentName }}</p>
+        <p><strong>ID Estudiante:</strong> {{ record.studentId }}</p>
+        <p><strong>Hora:</strong> {{ record.time }}</p>
       </ion-label>
     </ion-item>
   </ion-list>

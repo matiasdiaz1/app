@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { FirebaseService } from 'src/app/services/firebase.service';
-import { ToastController, LoadingController, AlertController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 import { Attendance } from 'src/app/models/attendance.model';
 
 @Component({
@@ -17,7 +17,6 @@ export class StudentHomePage implements OnInit {
   constructor(
     private firebaseService: FirebaseService,
     private toastController: ToastController,
-    private loadingController: LoadingController,
     private alertController: AlertController
   ) {}
 
@@ -46,13 +45,7 @@ export class StudentHomePage implements OnInit {
         return;
       }
 
-      const loading = await this.loadingController.create({
-        message: 'Escaneando...'
-      });
-      await loading.present();
-
       const { barcodes } = await BarcodeScanner.scan();
-      await loading.dismiss();
 
       if (barcodes.length === 0) {
         this.showToast('No se detectó ningún código QR');

@@ -1,0 +1,51 @@
+ion-header {
+    --background: #3880ff;
+    --color: #fff;
+  }
+  
+  .qr-code-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  
+  .qr-code-img {
+    width: 150px;
+    height: 150px;
+  }
+  
+  ion-item {
+    margin-bottom: 10px;
+  }
+  
+  .attendance-item {
+    --background: #f4f4f4;
+    --border-radius: 8px;
+  }
+  
+  .attendance-item ion-label {
+    color: #333;
+  }
+  
+  ion-button {
+    margin-top: 15px;
+  }
+  
+  ion-button[disabled] {
+    --background: #d3d3d3;
+  }
+  
+  h2 {
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+  
+  p {
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  ion-select {
+    --padding-start: 0;
+  }
+  
