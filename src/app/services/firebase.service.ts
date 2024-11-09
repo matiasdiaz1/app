@@ -35,7 +35,7 @@ export class FirebaseService {
   async getCourses() {
     try {
       const db = getFirestore();
-      const coursesCollection = collection(db, 'courses');
+      const coursesCollection = collection(db, 'cursos');
       const courseSnapshot = await getDocs(coursesCollection);
       const coursesList: any[] = [];
 
@@ -43,9 +43,29 @@ export class FirebaseService {
         coursesList.push({ id: doc.id, ...doc.data() });
       });
 
+      console.log('Cursos cargados:', coursesList); // Log para depuración
       return coursesList;
     } catch (error) {
       console.error('Error al obtener los cursos:', error);
+      throw error;
+    }
+  }
+
+  async getSections(courseId: string) {
+    try {
+      const db = getFirestore();
+      const sectionsCollection = collection(db, `cursos/${courseId}/secciones`);
+      const sectionsSnapshot = await getDocs(sectionsCollection);
+      const sectionsList: any[] = [];
+
+      sectionsSnapshot.forEach((doc) => {
+        sectionsList.push({ id: doc.id, ...doc.data() });
+      });
+
+      console.log('Secciones cargadas:', sectionsList); // Log para depuración
+      return sectionsList;
+    } catch (error) {
+      console.error('Error al obtener las secciones:', error);
       throw error;
     }
   }

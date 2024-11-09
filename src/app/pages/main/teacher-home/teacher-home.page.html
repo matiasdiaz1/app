@@ -1,54 +1,37 @@
 <ion-header>
-  <ion-toolbar color="primary">
-    <ion-title class="ion-text-center">Profesor</ion-title>
+  <ion-toolbar>
+    <ion-title>Gestión de Asistencia</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <!-- Selección de curso -->
-  <ion-item>
-    <ion-label>Selecciona un curso</ion-label>
-    <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange(selectedCourseId)">
-      <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.name }}</ion-select-option>
-    </ion-select>
-  </ion-item>
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Seleccionar Curso y Sección</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Curso</ion-label>
+        <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange($event.detail.value)">
+          <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.nombre }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Sección</ion-label>
+        <ion-select [(ngModel)]="selectedSection">
+          <ion-select-option *ngFor="let section of sections" [value]="section.id">{{ section["numero_seccion "] }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-button expand="full" (click)="generateQRCode()">Generar Código QR</ion-button>
+    </ion-card-content>
+  </ion-card>
 
-  <!-- Selección de sección -->
-  <ion-item *ngIf="selectedCourseId">
-    <ion-label>Selecciona una sección</ion-label>
-    <ion-select [(ngModel)]="selectedSection">
-      <ion-select-option *ngFor="let section of (courses | findCourse:selectedCourseId)?.sections" [value]="section">
-        {{ section }}
-      </ion-select-option>
-    </ion-select>
-  </ion-item>
-
-  <!-- Botón para generar código QR -->
-  <ion-button (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection" expand="full" color="secondary">
-    Generar Código QR
-  </ion-button>
-
-  <!-- Botón para cargar asistencia -->
-  <ion-button (click)="loadAttendance()" [disabled]="!selectedCourseId || !selectedSection" expand="full" color="tertiary">
-    Cargar Asistencia
-  </ion-button>
-
-  <!-- Muestra el código QR generado -->
-  <div *ngIf="qrCodeUrl" class="qr-code-container">
-    <img [src]="qrCodeUrl" alt="Código QR" class="qr-code-img">
-  </div>
-
-  <!-- Lista de asistencia -->
-  <ion-list>
-    <ion-item *ngFor="let record of attendanceRecords" class="attendance-item">
-      <ion-label>
-        <h2>{{ record.date }}</h2>
-        <p><strong>Curso:</strong> {{ record.courseId }}</p>
-        <p><strong>Sección:</strong> {{ record.section }}</p>
-        <p><strong>Nombre Estudiante:</strong> {{ record.studentName }}</p>
-        <p><strong>ID Estudiante:</strong> {{ record.studentId }}</p>
-        <p><strong>Hora:</strong> {{ record.time }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+  <ion-card *ngIf="qrCodeUrl">
+    <ion-card-header>
+      <ion-card-title>Código QR Generado</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <img [src]="qrCodeUrl" alt="Código QR">
+    </ion-card-content>
+  </ion-card>
 </ion-content>
