@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { User } from 'src/app/models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { getFirestore, setDoc, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, setDoc, doc, getDoc, collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { Attendance } from 'src/app/models/attendance.model';
@@ -68,6 +68,20 @@ export class FirebaseService {
       console.error('Error al obtener las secciones:', error);
       throw error;
     }
+  }
+
+  listenToAttendance(courseId: string, section: string, callback: (attendance: any[]) => void) {
+    const db = getFirestore();
+    const attendanceCollection = collection(db, 'attendances');
+    const q = query(attendanceCollection, where('courseId', '==', courseId), where('section', '==', section));
+
+    onSnapshot(q, (snapshot) => {
+      const attendanceList: any[] = [];
+      snapshot.forEach((doc) => {
+        attendanceList.push({ id: doc.id, ...doc.data() });
+      });
+      callback(attendanceList);
+    });
   }
 
   async signIn(user: User) {

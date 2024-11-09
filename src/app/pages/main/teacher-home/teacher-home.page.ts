@@ -14,6 +14,7 @@ export class TeacherHomePage {
   selectedCourseId: string | null = null;
   selectedSection: string | null = null;
   qrCodeUrl: string | null = null;
+  attendanceList: any[] = [];
 
   constructor(
     private firebaseService: FirebaseService,
@@ -44,6 +45,16 @@ export class TeacherHomePage {
     } catch (error) {
       console.error('Error al cargar las secciones:', error);
       this.showAlert('Error', 'Hubo un problema al cargar las secciones. Por favor, intenta nuevamente.');
+    }
+  }
+
+  async onSectionChange(section: string) {
+    this.selectedSection = section;
+    if (this.selectedCourseId && this.selectedSection) {
+      this.firebaseService.listenToAttendance(this.selectedCourseId, this.selectedSection, (attendance) => {
+        this.attendanceList = attendance;
+        console.log('Asistencia actualizada:', this.attendanceList); // Añadir log para depuración
+      });
     }
   }
 

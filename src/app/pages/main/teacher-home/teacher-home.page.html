@@ -18,8 +18,8 @@
       </ion-item>
       <ion-item>
         <ion-label>Sección</ion-label>
-        <ion-select [(ngModel)]="selectedSection">
-          <ion-select-option *ngFor="let section of sections" [value]="section.id">{{ section["numero_seccion "] }}</ion-select-option>
+        <ion-select [(ngModel)]="selectedSection" (ionChange)="onSectionChange($event.detail.value)">
+          <ion-select-option *ngFor="let section of sections" [value]="section.id">{{ section.nombre }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-button expand="full" (click)="generateQRCode()">Generar Código QR</ion-button>
@@ -32,6 +32,19 @@
     </ion-card-header>
     <ion-card-content>
       <img [src]="qrCodeUrl" alt="Código QR">
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="attendanceList.length > 0">
+    <ion-card-header>
+      <ion-card-title>Estudiantes que han registrado su asistencia</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let attendance of attendanceList">
+          {{ attendance.studentName }} - {{ attendance.date }} {{ attendance.time }}
+        </ion-item>
+      </ion-list>
     </ion-card-content>
   </ion-card>
 </ion-content>
