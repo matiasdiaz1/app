@@ -12,6 +12,8 @@ import { Attendance } from 'src/app/models/attendance.model';
 export class StudentHomePage implements OnInit {
   isSupported = false;
   user: any = null;
+  courses: any[] = [];
+  selectedCourseId: string | null = null;
   attendanceRecords: Attendance[] = [];
 
   constructor(
@@ -27,9 +29,42 @@ export class StudentHomePage implements OnInit {
     this.firebaseService.currentUser$.subscribe(user => {
       this.user = user;
       if (user) {
-        this.loadAttendance(); // Cargar asistencias
+        this.loadCourses(); // Cargar cursos al iniciar
       }
     });
+  }
+
+  async loadCourses() {
+    try {
+      this.courses = await this.firebaseService.getCourses();
+      console.log('Cursos cargados:', this.courses); // Log para depuración
+    } catch (error) {
+      console.error('Error al cargar los cursos:', error);
+      this.showAlert('Error', 'Hubo un problema al cargar los cursos. Por favor, intenta nuevamente.');
+    }
+  }
+
+  async onCourseChange(courseId: string) {
+    this.selectedCourseId = courseId;
+    this.loadAttendance(); // Cargar asistencias del curso seleccionado
+  }
+
+  async loadAttendance() {
+    if (!this.selectedCourseId) {
+      return;
+    }
+
+    try {
+      const attendanceList = await this.firebaseService.getStudentAttendance(this.user.uid);
+      this.attendanceRecords = attendanceList.filter(record => record.courseId === this.selectedCourseId);
+
+      if (this.attendanceRecords.length === 0) {
+        this.showToast('No se han registrado asistencias para este curso.');
+      }
+    } catch (error) {
+      console.error('Error al cargar asistencias:', error);
+      this.showAlert('Error', 'Hubo un error al cargar las asistencias. Por favor, intenta nuevamente.');
+    }
   }
 
   async requestPermissions(): Promise<boolean> {
@@ -103,16 +138,6 @@ export class StudentHomePage implements OnInit {
     } catch (error) {
       console.error('Error al registrar asistencia:', error);
       this.showAlert('Error', 'Hubo un error al registrar la asistencia. Por favor, intenta nuevamente.');
-    }
-  }
-
-  async loadAttendance() {
-    try {
-      const attendanceList = await this.firebaseService.getStudentAttendance(this.user.uid);
-      this.attendanceRecords = attendanceList;
-    } catch (error) {
-      console.error('Error al cargar asistencias:', error);
-      this.showAlert('Error', 'Hubo un error al cargar las asistencias. Por favor, intenta nuevamente.');
     }
   }
 

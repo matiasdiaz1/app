@@ -5,14 +5,17 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Selección de curso -->
+  <ion-item>
+    <ion-label>Curso</ion-label>
+    <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange($event.detail.value)">
+      <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.nombre }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
   <!-- Botón para escanear -->
   <ion-button expand="full" color="secondary" (click)="scan()" *ngIf="isSupported" class="scan-btn">
     Escanear Código QR
-  </ion-button>
-
-  <!-- Botón para cargar asistencia -->
-  <ion-button expand="full" color="tertiary" (click)="loadAttendance()">
-    Cargar Asistencia
   </ion-button>
 
   <!-- Lista de asistencia -->
@@ -26,4 +29,9 @@
       </ion-label>
     </ion-item>
   </ion-list>
+
+  <!-- Mensaje si no hay asistencias -->
+  <ion-item *ngIf="attendanceRecords.length === 0">
+    <ion-label>No se han registrado asistencias para este curso.</ion-label>
+  </ion-item>
 </ion-content>
