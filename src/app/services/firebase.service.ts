@@ -303,4 +303,20 @@ export class FirebaseService {
         throw error;
     }
 }
+async getAttendancePercentage(studentId: string, courseId: string): Promise<number> {
+  try {
+    const db = getFirestore();
+    const attendanceCollection = collection(db, 'attendances');
+    const q = query(attendanceCollection, where('studentId', '==', studentId), where('courseId', '==', courseId));
+    const attendanceSnapshot = await getDocs(q);
+
+    const totalClasses = attendanceSnapshot.size;
+    const attendedClasses = attendanceSnapshot.docs.filter(doc => doc.data()['attended']).length;
+
+    return totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
+  } catch (error) {
+    console.error('Error al calcular el porcentaje de asistencia:', error);
+    throw error;
+  }
+}
 }

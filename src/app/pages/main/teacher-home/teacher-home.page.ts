@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FirebaseService } from 'src/app/services/firebase.service';
-import { QRCodeService } from 'src/app/services/qrcode.service'; // Asegúrate de tener este servicio implementado
+import { QRCodeService } from 'src/app/services/qrcode.service';
 import { ToastController, AlertController, LoadingController } from '@ionic/angular';
 
 @Component({
@@ -18,7 +18,7 @@ export class TeacherHomePage {
 
   constructor(
     private firebaseService: FirebaseService,
-    private qrCodeService: QRCodeService, // Inyecta el servicio de generación de QR
+    private qrCodeService: QRCodeService,
     private toastController: ToastController,
     private alertController: AlertController,
     private loadingController: LoadingController
@@ -29,7 +29,7 @@ export class TeacherHomePage {
   async loadCourses() {
     try {
       this.courses = await this.firebaseService.getCourses();
-      console.log('Cursos cargados:', this.courses); // Añadir log para depuración
+      console.log('Cursos cargados:', this.courses);
     } catch (error) {
       console.error('Error al cargar los cursos:', error);
       this.showAlert('Error', 'Hubo un problema al cargar los cursos. Por favor, intenta nuevamente.');
@@ -41,7 +41,7 @@ export class TeacherHomePage {
     this.selectedSection = null;
     try {
       this.sections = await this.firebaseService.getSections(courseId);
-      console.log('Secciones cargadas:', this.sections); // Añadir log para depuración
+      console.log('Secciones cargadas:', this.sections);
     } catch (error) {
       console.error('Error al cargar las secciones:', error);
       this.showAlert('Error', 'Hubo un problema al cargar las secciones. Por favor, intenta nuevamente.');
@@ -51,9 +51,12 @@ export class TeacherHomePage {
   async onSectionChange(section: string) {
     this.selectedSection = section;
     if (this.selectedCourseId && this.selectedSection) {
-      this.firebaseService.listenToAttendance(this.selectedCourseId, this.selectedSection, (attendance) => {
-        this.attendanceList = attendance;
-        console.log('Asistencia actualizada:', this.attendanceList); // Añadir log para depuración
+      this.firebaseService.listenToAttendance(this.selectedCourseId, this.selectedSection, async (attendance) => {
+        this.attendanceList = await Promise.all(attendance.map(async (record) => {
+          const percentage = await this.firebaseService.getAttendancePercentage(record.studentId, this.selectedCourseId);
+          return { ...record, percentage };
+        }));
+        console.log('Asistencia actualizada:', this.attendanceList);
       });
     }
   }
@@ -63,26 +66,28 @@ export class TeacherHomePage {
       this.showAlert('Error', 'Selecciona un curso y una sección antes de generar el código QR');
       return;
     }
-
+  
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const time = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[1].split('.')[0];
-
+    const expirationTime = new Date(now.getTime() + 5 * 60000).toISOString(); // QR válido por 15 minutos
+  
     const qrData = {
       courseId: this.selectedCourseId,
       section: this.selectedSection,
       date,
-      time
+      time,
+      expirationTime
     };
-
+  
     try {
       const loading = await this.loadingController.create({
         message: 'Generando código QR...'
       });
       await loading.present();
-
+  
       this.qrCodeUrl = await this.qrCodeService.generateQRCode(JSON.stringify(qrData));
-
+  
       await loading.dismiss();
       this.showToast('Código QR generado correctamente');
     } catch (error) {

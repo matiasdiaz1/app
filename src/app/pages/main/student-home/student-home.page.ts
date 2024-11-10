@@ -15,6 +15,8 @@ export class StudentHomePage implements OnInit {
   courses: any[] = [];
   selectedCourseId: string | null = null;
   attendanceRecords: Attendance[] = [];
+  attendancePercentage: number | null = null;
+  noClassesRegistered: boolean = false;
 
   constructor(
     private firebaseService: FirebaseService,
@@ -59,7 +61,11 @@ export class StudentHomePage implements OnInit {
       this.attendanceRecords = attendanceList.filter(record => record.courseId === this.selectedCourseId);
 
       if (this.attendanceRecords.length === 0) {
-        this.showToast('No se han registrado asistencias para este curso.');
+        this.noClassesRegistered = true;
+        this.attendancePercentage = null;
+      } else {
+        this.noClassesRegistered = false;
+        this.attendancePercentage = await this.firebaseService.getAttendancePercentage(this.user.uid, this.selectedCourseId);
       }
     } catch (error) {
       console.error('Error al cargar asistencias:', error);

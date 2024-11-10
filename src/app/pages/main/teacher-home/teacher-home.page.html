@@ -42,7 +42,9 @@
     <ion-card-content>
       <ion-list>
         <ion-item *ngFor="let attendance of attendanceList">
-          {{ attendance.studentName }} - {{ attendance.date }} {{ attendance.time }}
+          <ion-label>
+            {{ attendance.studentName }} - {{ attendance.date }} {{ attendance.time }} - {{ attendance.percentage | number:'1.0-2' }}%
+          </ion-label>
         </ion-item>
       </ion-list>
     </ion-card-content>
