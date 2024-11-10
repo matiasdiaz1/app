@@ -31,7 +31,9 @@
       <ion-card-title>Código QR Generado</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <img [src]="qrCodeUrl" alt="Código QR">
+      <div class="qr-code-container">
+        <img [src]="qrCodeUrl" alt="Código QR" class="qr-code-img">
+      </div>
     </ion-card-content>
   </ion-card>
 
@@ -41,9 +43,10 @@
     </ion-card-header>
     <ion-card-content>
       <ion-list>
-        <ion-item *ngFor="let attendance of attendanceList">
+        <ion-item *ngFor="let attendance of attendanceList" class="attendance-item">
           <ion-label>
-            {{ attendance.studentName }} - {{ attendance.date }} {{ attendance.time }} - {{ attendance.percentage | number:'1.0-2' }}%
+            <h2>{{ attendance.studentName }}</h2>
+            <p>{{ attendance.date }} {{ attendance.time }} - {{ attendance.percentage | number:'1.0-2' }}%</p>
           </ion-label>
         </ion-item>
       </ion-list>
