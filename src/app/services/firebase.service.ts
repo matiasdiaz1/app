@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   onAuthStateChanged,
-  Auth
+  Auth,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { User } from 'src/app/models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
@@ -231,32 +232,32 @@ export class FirebaseService {
 
   async recordAttendance(attendance: Attendance) {
     try {
-        const currentUser = this.afAuth.currentUser; // Obtener el usuario autenticado
-        if (!currentUser) {
-            throw new Error('No hay usuario autenticado');
-        }
-        
-        // Obtener el ID del estudiante
-        const studentId = (await currentUser).uid; 
+      const currentUser = this.afAuth.currentUser; // Obtener el usuario autenticado
+      if (!currentUser) {
+        throw new Error('No hay usuario autenticado');
+      }
 
-        // Obtener el perfil del estudiante para obtener su nombre
-        const userProfile = await this.getUserProfile(studentId); 
-        
-        // Asignar los valores a la asistencia
-        attendance.studentId = studentId; // ID del estudiante
-        attendance.studentName = userProfile.name; // Nombre del estudiante
+      // Obtener el ID del estudiante
+      const studentId = (await currentUser).uid;
 
-        // Registrar la asistencia en Firestore
-        const db = getFirestore();
-        const attendancePath = `attendances/${attendance.studentId}_${attendance.date}`; 
-        await setDoc(doc(db, attendancePath), attendance);
-        console.log('Asistencia registrada:', attendance);
-        return true;
+      // Obtener el perfil del estudiante para obtener su nombre
+      const userProfile = await this.getUserProfile(studentId);
+
+      // Asignar los valores a la asistencia
+      attendance.studentId = studentId; // ID del estudiante
+      attendance.studentName = userProfile.name; // Nombre del estudiante
+
+      // Registrar la asistencia en Firestore
+      const db = getFirestore();
+      const attendancePath = `attendances/${attendance.studentId}_${attendance.date}`;
+      await setDoc(doc(db, attendancePath), attendance);
+      console.log('Asistencia registrada:', attendance);
+      return true;
     } catch (error) {
-        console.error('Error al registrar asistencia:', error);
-        throw error;
+      console.error('Error al registrar asistencia:', error);
+      throw error;
     }
-}
+  }
 
   async signOut() {
     const auth = getAuth();
@@ -287,36 +288,43 @@ export class FirebaseService {
 
   async getAllAttendance(courseId: string, section: string) {
     try {
-        const db = getFirestore();
-        const attendanceCollection = collection(db, 'attendances');
-        const q = query(attendanceCollection, where('courseId', '==', courseId), where('section', '==', section));
-        const attendanceSnapshot = await getDocs(q);
+      const db = getFirestore();
+      const attendanceCollection = collection(db, 'attendances');
+      const q = query(attendanceCollection, where('courseId', '==', courseId), where('section', '==', section));
+      const attendanceSnapshot = await getDocs(q);
 
-        const attendanceList: Attendance[] = attendanceSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Attendance));
+      const attendanceList: Attendance[] = attendanceSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Attendance));
 
-        return attendanceList;
+      return attendanceList;
     } catch (error) {
-        console.error('Error al obtener las asistencias:', error);
-        throw error;
+      console.error('Error al obtener las asistencias:', error);
+      throw error;
     }
-}
-async getAttendancePercentage(studentId: string, courseId: string): Promise<number> {
-  try {
-    const db = getFirestore();
-    const attendanceCollection = collection(db, 'attendances');
-    const q = query(attendanceCollection, where('studentId', '==', studentId), where('courseId', '==', courseId));
-    const attendanceSnapshot = await getDocs(q);
-
-    const totalClasses = attendanceSnapshot.size;
-    const attendedClasses = attendanceSnapshot.docs.filter(doc => doc.data()['attended']).length;
-
-    return totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
-  } catch (error) {
-    console.error('Error al calcular el porcentaje de asistencia:', error);
-    throw error;
   }
-}
+  async getAttendancePercentage(studentId: string, courseId: string): Promise<number> {
+    try {
+      const db = getFirestore();
+      const attendanceCollection = collection(db, 'attendances');
+      const q = query(attendanceCollection, where('studentId', '==', studentId), where('courseId', '==', courseId));
+      const attendanceSnapshot = await getDocs(q);
+
+      const totalClasses = attendanceSnapshot.size;
+      const attendedClasses = attendanceSnapshot.docs.filter(doc => doc.data()['attended']).length;
+
+      return totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
+    } catch (error) {
+      console.error('Error al calcular el porcentaje de asistencia:', error);
+      throw error;
+    }
+  }
+
+
+  //ENVIAR EMAIL PARA RESTABLECER CONTRASEÑA
+
+  sendRecoveryEmail(email: string) {
+    return sendPasswordResetEmail(getAuth(), email);
+  }
 }
