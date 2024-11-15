@@ -327,4 +327,9 @@ export class FirebaseService {
   sendRecoveryEmail(email: string) {
     return sendPasswordResetEmail(getAuth(), email);
   }
+
+
+  getAuth(){
+    return getAuth();
+  }
 }

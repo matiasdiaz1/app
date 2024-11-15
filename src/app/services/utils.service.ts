@@ -6,10 +6,14 @@ import { LoadingController, ToastController, ToastOptions } from '@ionic/angular
   providedIn: 'root'
 })
 export class UtilsService {
-
   loadingCtrl = inject(LoadingController);
   toastCtrl = inject(ToastController);
   router = inject(Router);
+
+  // Método corregido para la navegación
+  async routerLink(url: string) {
+    return await this.router.navigate([url]);
+  }
 
   loading() {
     return this.loadingCtrl.create({ spinner: 'crescent' });
@@ -20,13 +24,14 @@ export class UtilsService {
     toast.present();
   }
 
-  // GUARDAR ELEMENTO EN LOCALSTORAGE
+  // Guardar en localStorage
   saveInLocalStorage(key: string, value: any) {
     return localStorage.setItem(key, JSON.stringify(value));
   }
 
-  // OBTENER ELEMENTO EN LOCALSTORAGE
+  // Obtener de localStorage
   getFromLocalStorage(key: string) {
-    return JSON.parse(localStorage.getItem(key) || '{}');
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
   }
 }
