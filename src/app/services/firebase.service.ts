@@ -15,6 +15,7 @@ import { getFirestore, setDoc, doc, getDoc, collection, getDocs, query, where, o
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { Attendance } from 'src/app/models/attendance.model';
+import { UtilsService } from './utils.service';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,7 @@ export class FirebaseService {
 
   firestore = inject(AngularFirestore);
   router = inject(Router);
+  utilsSvc = inject(UtilsService)
 
   constructor(private afAuth: AngularFireAuth) {
     const auth = getAuth();
@@ -259,13 +261,7 @@ export class FirebaseService {
     }
   }
 
-  async signOut() {
-    const auth = getAuth();
-    await auth.signOut();
-    localStorage.clear();
-    this.authState.next(null);
-    await this.router.navigate(['/auth']);
-  }
+ 
 
   async getStudentAttendance(studentId: string) {
     try {
@@ -331,5 +327,13 @@ export class FirebaseService {
 
   getAuth(){
     return getAuth();
+  }
+
+
+ signOut() {
+  getAuth().signOut();
+  localStorage.removeItem('user')
+  this.utilsSvc.routerLink('/auth')
+
   }
 }

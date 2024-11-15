@@ -1,6 +1,11 @@
 <app-header title="Alumno"></app-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Botón para cerrar sesión -->
+  <ion-button (click)="signOut()">
+    Cerrar sesión
+  </ion-button>
+
   <!-- Selección de curso -->
   <ion-item>
     <ion-label>Curso</ion-label>

@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { FirebaseService } from 'src/app/services/firebase.service';
 import { ToastController, AlertController } from '@ionic/angular';
 import { Attendance } from 'src/app/models/attendance.model';
+import { UtilsService } from 'src/app/services/utils.service';
 
 @Component({
   selector: 'app-student-home',
@@ -17,6 +18,8 @@ export class StudentHomePage implements OnInit {
   attendanceRecords: Attendance[] = [];
   attendancePercentage: number | null = null;
   noClassesRegistered: boolean = false;
+  firebaseSvc = inject(FirebaseService);
+  utilsSvc = inject(UtilsService);
 
   constructor(
     private firebaseService: FirebaseService,
@@ -164,4 +167,9 @@ export class StudentHomePage implements OnInit {
     });
     await alert.present();
   }
+
+  signOut() {
+    this.firebaseSvc.signOut();
+  }
+
 }

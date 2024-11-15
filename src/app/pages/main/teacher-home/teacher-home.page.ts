@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FirebaseService } from 'src/app/services/firebase.service';
 import { QRCodeService } from 'src/app/services/qrcode.service';
 import { ToastController, AlertController, LoadingController } from '@ionic/angular';
+import { UtilsService } from 'src/app/services/utils.service';
 
 @Component({
   selector: 'app-teacher-home',
@@ -15,6 +16,9 @@ export class TeacherHomePage {
   selectedSection: string | null = null;
   qrCodeUrl: string | null = null;
   attendanceList: any[] = [];
+  firebaseSvc = inject(FirebaseService);
+  utilsSvc = inject(UtilsService);
+
 
   constructor(
     private firebaseService: FirebaseService,
@@ -112,5 +116,10 @@ export class TeacherHomePage {
       buttons: ['OK']
     });
     await alert.present();
+  }
+
+
+  signOut() {
+    this.firebaseSvc.signOut();
   }
 }

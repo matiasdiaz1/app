@@ -21,7 +21,7 @@ export class AuthGuard implements CanActivate {
         if (auth) {
           const userEmail = localStorage.getItem('userEmail');
           const isTeacher = localStorage.getItem('isTeacher') === 'true';
-          
+
           if (userEmail) {
             // Verificar si la ruta actual coincide con el rol del usuario
             const currentPath = state.url;
@@ -30,20 +30,18 @@ export class AuthGuard implements CanActivate {
 
             if ((isTeacher && isTeacherRoute) || (!isTeacher && isStudentRoute)) {
               resolve(true);
+              return;
             } else {
               // Redirigir al usuario a su ruta correspondiente
               const correctPath = isTeacher ? '/main/teacher-home' : '/main/student-home';
               await this.utilsSvc.routerLink(correctPath);
               resolve(false);
+              return;
             }
-          } else {
-            await this.utilsSvc.routerLink('/auth');
-            resolve(false);
           }
-        } else {
-          await this.utilsSvc.routerLink('/auth');
-          resolve(false);
         }
+        await this.utilsSvc.routerLink('/auth');
+        resolve(false);
       });
     });
   }
