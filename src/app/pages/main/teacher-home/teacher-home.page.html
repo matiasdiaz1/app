@@ -8,17 +8,39 @@
 
   <ion-card>
     <ion-card-header>
+      <ion-card-title>Crear Nuevo Curso</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Nombre del Curso</ion-label>
+        <ion-input [(ngModel)]="newCourse.name" required placeholder="Ej: Ciencias"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Sección del Curso</ion-label>
+        <ion-select [(ngModel)]="newCourse.section" required>
+          <ion-select-option value="A">Sección A</ion-select-option>
+          <ion-select-option value="B">Sección B</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-button expand="full" (click)="createCourse()" [disabled]="!newCourse.name || !newCourse.section">
+        Crear Curso
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
       <ion-card-title>Seleccionar Curso y Sección</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <ion-item>
-        <ion-label>Curso</ion-label>
+        <ion-label position="stacked">Curso</ion-label>
         <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange($event.detail.value)">
           <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.nombre }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label>Sección</ion-label>
+        <ion-label position="stacked">Sección</ion-label>
         <ion-select [(ngModel)]="selectedSection" (ionChange)="onSectionChange($event.detail.value)">
           <ion-select-option *ngFor="let section of sections" [value]="section.id">{{ section.nombre }}</ion-select-option>
         </ion-select>

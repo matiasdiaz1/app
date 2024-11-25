@@ -16,9 +16,12 @@ export class TeacherHomePage {
   selectedSection: string | null = null;
   qrCodeUrl: string | null = null;
   attendanceList: any[] = [];
+  newCourse: any = {
+    name: '',
+    section: ''
+  };
   firebaseSvc = inject(FirebaseService);
   utilsSvc = inject(UtilsService);
-
 
   constructor(
     private firebaseService: FirebaseService,
@@ -65,17 +68,42 @@ export class TeacherHomePage {
     }
   }
 
+  async createCourse() {
+    if (!this.newCourse.name || !this.newCourse.section) {
+      this.showAlert('Error', 'Por favor, completa todos los campos obligatorios');
+      return;
+    }
+
+    const courseData = {
+      name: this.newCourse.name,
+      sections: [
+        { nombre: this.newCourse.section, numero_seccion: this.newCourse.section }
+      ]
+    };
+
+    try {
+      const courseId = await this.firebaseService.addCourse(courseData);
+      this.showToast(`Curso "${this.newCourse.name}" creado exitosamente`);
+      
+      this.newCourse = { name: '', section: '' }; // Resetear formulario
+      this.loadCourses(); // Actualizar la lista de cursos
+    } catch (error) {
+      console.error('Error al crear el curso:', error);
+      this.showAlert('Error', 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
+    }
+  }
+
   async generateQRCode() {
     if (!this.selectedCourseId || !this.selectedSection) {
       this.showAlert('Error', 'Selecciona un curso y una sección antes de generar el código QR');
       return;
     }
-  
+
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const time = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[1].split('.')[0];
-    const expirationTime = new Date(now.getTime() + 5 * 60000).toISOString(); // QR válido por 15 minutos
-  
+    const expirationTime = new Date(now.getTime() + 5 * 60000).toISOString(); // QR válido por 5 minutos
+
     const qrData = {
       courseId: this.selectedCourseId,
       section: this.selectedSection,
@@ -83,15 +111,15 @@ export class TeacherHomePage {
       time,
       expirationTime
     };
-  
+
     try {
       const loading = await this.loadingController.create({
         message: 'Generando código QR...'
       });
       await loading.present();
-  
+
       this.qrCodeUrl = await this.qrCodeService.generateQRCode(JSON.stringify(qrData));
-  
+
       await loading.dismiss();
       this.showToast('Código QR generado correctamente');
     } catch (error) {
@@ -117,7 +145,6 @@ export class TeacherHomePage {
     });
     await alert.present();
   }
-
 
   signOut() {
     this.firebaseSvc.signOut();

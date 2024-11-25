@@ -73,6 +73,26 @@ export class FirebaseService {
     }
   }
 
+  async addCourse(courseData: any) {
+    try {
+      const courseRef = await this.firestore.collection('cursos').add({ nombre: courseData.name });
+      const sectionsRef = this.firestore.collection(`cursos/${courseRef.id}/secciones`);
+      const sections = courseData.sections;
+  
+      for (const section of sections) {
+        await sectionsRef.add({
+          nombre: section.nombre,
+          numero_seccion: section.numero_seccion
+        });
+      }
+  
+      return courseRef.id;
+    } catch (error) {
+      console.error('Error al agregar curso:', error);
+      throw error;
+    }
+  }
+
   listenToAttendance(courseId: string, section: string, callback: (attendance: any[]) => void) {
     const db = getFirestore();
     const attendanceCollection = collection(db, 'attendances');
