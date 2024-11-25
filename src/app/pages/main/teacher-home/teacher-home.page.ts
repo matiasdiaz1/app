@@ -10,9 +10,6 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./teacher-home.page.scss'],
 })
 export class TeacherHomePage {
-createCourse() {
-throw new Error('Method not implemented.');
-}
   courses: any[] = [];
   sections: any[] = [];
   selectedCourseId: string | null = null;
@@ -27,6 +24,7 @@ throw new Error('Method not implemented.');
     nombre: '',
     numero_seccion: ''
   };
+
   firebaseSvc = inject(FirebaseService);
   utilsSvc = inject(UtilsService);
 
@@ -40,7 +38,6 @@ throw new Error('Method not implemented.');
     this.loadCourses();
   }
 
-  // Cargar los cursos del profesor
   async loadCourses() {
     try {
       this.courses = await this.firebaseService.getCourses();
@@ -51,7 +48,6 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Cambiar el curso seleccionado y cargar las secciones correspondientes
   async onCourseChange(courseId: string) {
     this.selectedCourseId = courseId;
     this.selectedSection = null;
@@ -64,7 +60,6 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Cambiar la sección seleccionada y cargar la lista de asistencia
   async onSectionChange(section: string) {
     this.selectedSection = section;
     if (this.selectedCourseId && this.selectedSection) {
@@ -78,10 +73,25 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Agregar una nueva sección
+  onSectionNameChange() {
+    // Aceptar solo letras mayúsculas (A-Z) y evitar números o caracteres no válidos
+    this.newSection.nombre = this.newSection.nombre.toUpperCase();
+    if (!/^[A-Z]+$/.test(this.newSection.nombre)) {
+      this.newSection.nombre = ''; // Restablecer el valor si no es una letra mayúscula
+    }
+    if (this.newSection.nombre.length === 1) {
+      this.newSection.numero_seccion = this.newSection.nombre; // Sincronizar con el número de sección
+    }
+  }
+
   async addSection() {
     if (!this.selectedCourseId || !this.newSection.nombre || !this.newSection.numero_seccion) {
       this.showAlert('Error', 'Por favor, completa todos los campos obligatorios');
+      return;
+    }
+
+    if (this.newSection.nombre !== this.newSection.numero_seccion) {
+      this.showAlert('Error', 'El nombre de la sección y el número de sección deben ser iguales');
       return;
     }
 
@@ -103,7 +113,6 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Función para verificar si la sección ya existe en el curso
   async checkSectionExists(courseId: string, sectionName: string): Promise<boolean> {
     try {
       const sections = await this.firebaseService.getSections(courseId);
@@ -114,7 +123,6 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Función para generar un código QR para la sección seleccionada
   async generateQRCode() {
     if (!this.selectedCourseId || !this.selectedSection) {
       this.showAlert('Error', 'Selecciona un curso y una sección antes de generar el código QR');
@@ -150,7 +158,6 @@ throw new Error('Method not implemented.');
     }
   }
 
-  // Función para mostrar un toast
   async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
@@ -160,7 +167,6 @@ throw new Error('Method not implemented.');
     await toast.present();
   }
 
-  // Función para mostrar una alerta
   async showAlert(header: string, message: string) {
     const alert = await this.alertController.create({
       header,
@@ -170,8 +176,32 @@ throw new Error('Method not implemented.');
     await alert.present();
   }
 
-  // Cerrar sesión
   signOut() {
     this.firebaseSvc.signOut();
   }
+
+  async createCourse() {
+    if (!this.newCourse.name || !this.newCourse.section) {
+      this.showAlert('Error', 'Por favor, completa todos los campos obligatorios');
+      return;
+    }
+  
+    const courseData = {
+      name: this.newCourse.name,
+      sections: [
+        { nombre: this.newCourse.section, numero_seccion: this.newCourse.section }
+      ]
+    };
+  
+    try {
+      const courseId = await this.firebaseService.addCourse(courseData);
+      this.showToast(`Curso "${this.newCourse.name}" creado exitosamente`);
+      
+      this.newCourse = { name: '', section: '' }; // Resetear formulario
+      this.loadCourses(); // Actualizar la lista de cursos
+    } catch (error) {
+      console.error('Error al crear el curso:', error);
+      this.showAlert('Error', 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
+    } 
+}
 }

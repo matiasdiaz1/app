@@ -43,11 +43,11 @@
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Nombre de la Sección</ion-label>
-        <ion-input [(ngModel)]="newSection.nombre" required placeholder="Ej: Sección A"></ion-input>
+        <ion-input [(ngModel)]="newSection.nombre" required placeholder="Ej: A, B..." (ngModelChange)="newSection.numero_seccion = newSection.nombre"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Número de Sección</ion-label>
-        <ion-input [(ngModel)]="newSection.numero_seccion" required placeholder="Ej: 1"></ion-input>
+        <ion-input [(ngModel)]="newSection.numero_seccion" readonly></ion-input>
       </ion-item>
       <ion-button expand="full" (click)="addSection()" [disabled]="!newSection.nombre || !newSection.numero_seccion">
         Agregar Sección
@@ -55,40 +55,33 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Seleccionar Curso y Sección -->
+  <!-- Generar Código QR -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Seleccionar Curso y Sección</ion-card-title>
+      <ion-card-title>Generar Código QR</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <ion-item>
-        <ion-label position="stacked">Curso</ion-label>
+        <ion-label position="stacked">Seleccionar Curso y Sección</ion-label>
         <ion-select [(ngModel)]="selectedCourseId" (ionChange)="onCourseChange($event.detail.value)">
           <ion-select-option *ngFor="let course of courses" [value]="course.id">{{ course.nombre }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label position="stacked">Sección</ion-label>
         <ion-select [(ngModel)]="selectedSection" (ionChange)="onSectionChange($event.detail.value)">
           <ion-select-option *ngFor="let section of sections" [value]="section.id">{{ section.nombre }}</ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-button expand="full" (click)="generateQRCode()">Generar Código QR</ion-button>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Mostrar el Código QR generado -->
-  <ion-card *ngIf="qrCodeUrl">
-    <ion-card-header>
-      <ion-card-title>Código QR Generado</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <div class="qr-code-container">
-        <img [src]="qrCodeUrl" alt="Código QR" class="qr-code-img">
+      <ion-button expand="full" (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection">
+        Generar QR
+      </ion-button>
+      <div *ngIf="qrCodeUrl">
+        <img [src]="qrCodeUrl" alt="Código QR">
       </div>
     </ion-card-content>
   </ion-card>
 
+  <!-- Lista de Asistencia -->
   <ion-card *ngIf="attendanceList.length > 0">
     <ion-card-header>
       <ion-card-title>Estudiantes que han registrado su asistencia</ion-card-title>
