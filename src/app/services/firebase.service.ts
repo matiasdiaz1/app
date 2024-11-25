@@ -16,6 +16,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { Attendance } from 'src/app/models/attendance.model';
 import { UtilsService } from './utils.service';
+import { addDoc } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -60,11 +61,11 @@ export class FirebaseService {
       const sectionsCollection = collection(db, `cursos/${courseId}/secciones`);
       const sectionsSnapshot = await getDocs(sectionsCollection);
       const sectionsList: any[] = [];
-
+  
       sectionsSnapshot.forEach((doc) => {
         sectionsList.push({ id: doc.id, ...doc.data() });
       });
-
+  
       console.log('Secciones cargadas:', sectionsList); // Log para depuración
       return sectionsList;
     } catch (error) {
@@ -92,6 +93,9 @@ export class FirebaseService {
       throw error;
     }
   }
+
+  
+  
 
   listenToAttendance(courseId: string, section: string, callback: (attendance: any[]) => void) {
     const db = getFirestore();
@@ -356,4 +360,26 @@ export class FirebaseService {
   this.utilsSvc.routerLink('/auth')
 
   }
+
+// Función corregida para agregar una sección
+async addSectionToCourse(courseId: string, sectionData: any) {
+  try {
+    const db = getFirestore();
+    // Obtener la referencia a la colección de secciones del curso
+    const sectionsRef = collection(db, `cursos/${courseId}/secciones`);
+
+    // Usar addDoc para agregar la nueva sección
+    await addDoc(sectionsRef, {
+      nombre: sectionData.nombre,
+      numero_seccion: sectionData.numero_seccion,
+    });
+
+    console.log('Sección agregada al curso:', courseId);
+    return true;
+  } catch (error) {
+    console.error('Error al agregar sección:', error);
+    throw error;
+  }
+}
+  
 }

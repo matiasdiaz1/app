@@ -10,6 +10,9 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./teacher-home.page.scss'],
 })
 export class TeacherHomePage {
+createCourse() {
+throw new Error('Method not implemented.');
+}
   courses: any[] = [];
   sections: any[] = [];
   selectedCourseId: string | null = null;
@@ -19,6 +22,10 @@ export class TeacherHomePage {
   newCourse: any = {
     name: '',
     section: ''
+  };
+  newSection: any = {
+    nombre: '',
+    numero_seccion: ''
   };
   firebaseSvc = inject(FirebaseService);
   utilsSvc = inject(UtilsService);
@@ -33,6 +40,7 @@ export class TeacherHomePage {
     this.loadCourses();
   }
 
+  // Cargar los cursos del profesor
   async loadCourses() {
     try {
       this.courses = await this.firebaseService.getCourses();
@@ -43,6 +51,7 @@ export class TeacherHomePage {
     }
   }
 
+  // Cambiar el curso seleccionado y cargar las secciones correspondientes
   async onCourseChange(courseId: string) {
     this.selectedCourseId = courseId;
     this.selectedSection = null;
@@ -55,6 +64,7 @@ export class TeacherHomePage {
     }
   }
 
+  // Cambiar la sección seleccionada y cargar la lista de asistencia
   async onSectionChange(section: string) {
     this.selectedSection = section;
     if (this.selectedCourseId && this.selectedSection) {
@@ -68,31 +78,43 @@ export class TeacherHomePage {
     }
   }
 
-  async createCourse() {
-    if (!this.newCourse.name || !this.newCourse.section) {
+  // Agregar una nueva sección
+  async addSection() {
+    if (!this.selectedCourseId || !this.newSection.nombre || !this.newSection.numero_seccion) {
       this.showAlert('Error', 'Por favor, completa todos los campos obligatorios');
       return;
     }
 
-    const courseData = {
-      name: this.newCourse.name,
-      sections: [
-        { nombre: this.newCourse.section, numero_seccion: this.newCourse.section }
-      ]
-    };
+    // Verificar si la sección ya existe en el curso seleccionado
+    const sectionExists = await this.checkSectionExists(this.selectedCourseId, this.newSection.nombre);
+    if (sectionExists) {
+      this.showAlert('Error', 'Ya existe una sección con ese nombre en este curso.');
+      return;
+    }
 
     try {
-      const courseId = await this.firebaseService.addCourse(courseData);
-      this.showToast(`Curso "${this.newCourse.name}" creado exitosamente`);
-      
-      this.newCourse = { name: '', section: '' }; // Resetear formulario
+      await this.firebaseService.addSectionToCourse(this.selectedCourseId, this.newSection);
+      this.showToast('Sección agregada exitosamente');
+      this.newSection = { nombre: '', numero_seccion: '' }; // Resetear formulario
       this.loadCourses(); // Actualizar la lista de cursos
     } catch (error) {
-      console.error('Error al crear el curso:', error);
-      this.showAlert('Error', 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
+      console.error('Error al agregar la sección:', error);
+      this.showAlert('Error', 'Hubo un problema al agregar la sección. Por favor, intenta nuevamente.');
     }
   }
 
+  // Función para verificar si la sección ya existe en el curso
+  async checkSectionExists(courseId: string, sectionName: string): Promise<boolean> {
+    try {
+      const sections = await this.firebaseService.getSections(courseId);
+      return sections.some(section => section.nombre === sectionName); // Verificar duplicados
+    } catch (error) {
+      console.error('Error al verificar las secciones:', error);
+      return false; // Si ocurre un error, asumimos que la sección no existe
+    }
+  }
+
+  // Función para generar un código QR para la sección seleccionada
   async generateQRCode() {
     if (!this.selectedCourseId || !this.selectedSection) {
       this.showAlert('Error', 'Selecciona un curso y una sección antes de generar el código QR');
@@ -128,6 +150,7 @@ export class TeacherHomePage {
     }
   }
 
+  // Función para mostrar un toast
   async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
@@ -137,6 +160,7 @@ export class TeacherHomePage {
     await toast.present();
   }
 
+  // Función para mostrar una alerta
   async showAlert(header: string, message: string) {
     const alert = await this.alertController.create({
       header,
@@ -146,6 +170,7 @@ export class TeacherHomePage {
     await alert.present();
   }
 
+  // Cerrar sesión
   signOut() {
     this.firebaseSvc.signOut();
   }
