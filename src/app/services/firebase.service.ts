@@ -74,27 +74,6 @@ export class FirebaseService {
     }
   }
 
-  async addCourse(courseData: any) {
-    try {
-      const courseRef = await this.firestore.collection('cursos').add({ nombre: courseData.name });
-      const sectionsRef = this.firestore.collection(`cursos/${courseRef.id}/secciones`);
-      const sections = courseData.sections;
-  
-      for (const section of sections) {
-        await sectionsRef.add({
-          nombre: section.nombre,
-          numero_seccion: section.numero_seccion
-        });
-      }
-  
-      return courseRef.id;
-    } catch (error) {
-      console.error('Error al agregar curso:', error);
-      throw error;
-    }
-  }
-
-  
   
 
   listenToAttendance(courseId: string, section: string, callback: (attendance: any[]) => void) {
@@ -362,24 +341,28 @@ export class FirebaseService {
   }
 
 // Función corregida para agregar una sección
-async addSectionToCourse(courseId: string, sectionData: any) {
+async addSectionToCourse(courseId: string, sectionData: { nombre: string, numero_seccion: string }) {
   try {
-    const db = getFirestore();
-    // Obtener la referencia a la colección de secciones del curso
-    const sectionsRef = collection(db, `cursos/${courseId}/secciones`);
-
-    // Usar addDoc para agregar la nueva sección
-    await addDoc(sectionsRef, {
-      nombre: sectionData.nombre,
-      numero_seccion: sectionData.numero_seccion,
-    });
-
-    console.log('Sección agregada al curso:', courseId);
-    return true;
+    // Crear una subcolección "secciones" en el curso
+    const sectionRef = await this.firestore.collection(`cursos/${courseId}/secciones`).add(sectionData);
+    return sectionRef; // Devuelve la referencia de la sección creada
   } catch (error) {
-    console.error('Error al agregar sección:', error);
+    console.error('Error al agregar sección al curso:', error);
     throw error;
   }
 }
   
+
+async addCourse(courseData: { nombre: string }) {
+  try {
+    // Usar el nombre del curso como ID del documento
+    const courseRef = await this.firestore.collection('cursos').doc(courseData.nombre).set(courseData);
+    return courseRef; // Devuelve la referencia del curso creado
+  } catch (error) {
+    console.error('Error al agregar curso:', error);
+    throw error;
+  }
+}
+
+
 }

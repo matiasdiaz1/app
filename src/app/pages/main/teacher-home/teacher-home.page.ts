@@ -179,7 +179,6 @@ export class TeacherHomePage {
   signOut() {
     this.firebaseSvc.signOut();
   }
-
   async createCourse() {
     if (!this.newCourse.name || !this.newCourse.section) {
       this.showAlert('Error', 'Por favor, completa todos los campos obligatorios');
@@ -187,21 +186,35 @@ export class TeacherHomePage {
     }
   
     const courseData = {
-      name: this.newCourse.name,
-      sections: [
-        { nombre: this.newCourse.section, numero_seccion: this.newCourse.section }
-      ]
+      nombre: this.newCourse.name,
+      // Puedes agregar otros campos relacionados con el curso si es necesario
     };
   
     try {
-      const courseId = await this.firebaseService.addCourse(courseData);
+      // Usar el nombre del curso como ID del documento
+      const courseRef = await this.firebaseService.addCourse(courseData);
+  
+      // Crear la subcolección de secciones para el curso
+      const sectionData = {
+        nombre: this.newCourse.section,           // Nombre de la sección
+        numero_seccion: this.newCourse.section.substring(0, 1) // Asignar el primer carácter como número de sección si se usa una letra (A, B, etc.)
+      };
+  
+      // Agregar la sección al curso recién creado
+      await this.firebaseService.addSectionToCourse(this.newCourse.name, sectionData);
+  
       this.showToast(`Curso "${this.newCourse.name}" creado exitosamente`);
-      
-      this.newCourse = { name: '', section: '' }; // Resetear formulario
-      this.loadCourses(); // Actualizar la lista de cursos
+  
+      // Resetear formulario
+      this.newCourse = { name: '', section: '' };
+  
+      // Actualizar la lista de cursos
+      this.loadCourses();
     } catch (error) {
       console.error('Error al crear el curso:', error);
       this.showAlert('Error', 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
-    } 
-}
+    }
+  }
+  
+  
 }
