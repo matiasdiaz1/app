@@ -18,12 +18,18 @@
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Sección del Curso</ion-label>
-        <ion-select [(ngModel)]="newCourse.section" required>
-          <ion-select-option value="A">Sección A</ion-select-option>
-          <ion-select-option value="B">Sección B</ion-select-option>
-        </ion-select>
+        <ion-input 
+          [(ngModel)]="newCourse.section" 
+          required 
+          placeholder="Ej: A, B, etc."
+          (ngModelChange)="onSectionNameChange()"
+        ></ion-input>
       </ion-item>
-      <ion-button expand="full" (click)="createCourse()" [disabled]="!newCourse.name || !newCourse.section">
+      <ion-button 
+        expand="full" 
+        (click)="createCourse()" 
+        [disabled]="!newCourse.name || !newCourse.section"
+      >
         Crear Curso
       </ion-button>
     </ion-card-content>
@@ -75,8 +81,8 @@
       <ion-button expand="full" (click)="generateQRCode()" [disabled]="!selectedCourseId || !selectedSection">
         Generar QR
       </ion-button>
-      <div *ngIf="qrCodeUrl">
-        <img [src]="qrCodeUrl" alt="Código QR">
+      <div *ngIf="qrCodeUrl" class="qr-code-container">
+        <img [src]="qrCodeUrl" alt="Código QR" class="qr-code-img">
       </div>
     </ion-card-content>
   </ion-card>

@@ -185,9 +185,15 @@ export class TeacherHomePage {
       return;
     }
   
+    // Validate section name (uppercase letters only)
+    const formattedSection = this.newCourse.section.toUpperCase();
+    if (!/^[A-Z0-9]+$/.test(formattedSection)) {
+      this.showAlert('Error', 'La sección solo puede contener letras mayúsculas o números');
+      return;
+    }
+  
     const courseData = {
       nombre: this.newCourse.name,
-      // Puedes agregar otros campos relacionados con el curso si es necesario
     };
   
     try {
@@ -196,8 +202,8 @@ export class TeacherHomePage {
   
       // Crear la subcolección de secciones para el curso
       const sectionData = {
-        nombre: this.newCourse.section,           // Nombre de la sección
-        numero_seccion: this.newCourse.section.substring(0, 1) // Asignar el primer carácter como número de sección si se usa una letra (A, B, etc.)
+        nombre: formattedSection,
+        numero_seccion: formattedSection.substring(0, 1)
       };
   
       // Agregar la sección al curso recién creado
@@ -215,6 +221,5 @@ export class TeacherHomePage {
       this.showAlert('Error', 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
     }
   }
-  
   
 }
